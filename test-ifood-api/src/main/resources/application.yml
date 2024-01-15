@@ -1,0 +1,27 @@
+server:
+  port: 8080
+  shutdown: graceful
+application:
+  context-path: /catalogo-marketplace/api
+spring:
+  application:
+    name: catalogo-marketplace
+  data:
+    mongodb:
+      uri: mongodb://root:root@localhost:27017/
+      database: admin
+  profiles:
+    active: local
+management:
+  health:
+    livenessstate.enabled: true
+    readinessstate.enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health, shutdown
+  endpoint:
+    shutdown:
+      enabled: true
+    health:
+      probes.enabled: true
