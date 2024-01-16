@@ -5,8 +5,12 @@ import com.alkimin.testifoodapi.infrastructure.category.dto.CategoryCreatedRecor
 import com.alkimin.testifoodapi.application.category.dto.CategoryUpdateRecord;
 import com.alkimin.testifoodapi.infrastructure.category.dto.CategoryUpdatedRecord;
 
+import java.util.HashMap;
+
 public interface CategoryService {
     CategoryCreatedRecord createCategory(CategoryCreateRecord categoryCreate);
 
     CategoryUpdatedRecord update(CategoryUpdateRecord categoryUpdate);
+
+    HashMap<String, String> delete(String categoryId);
 }

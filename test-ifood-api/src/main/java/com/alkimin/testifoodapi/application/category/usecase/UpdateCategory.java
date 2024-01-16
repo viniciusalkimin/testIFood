@@ -13,6 +13,5 @@ public class UpdateCategory {
     private CategoryService categoryService;
     public CategoryUpdatedRecord update(CategoryUpdateRecord categoryUpdate) {
         return categoryService.update(categoryUpdate);
-
     }
 }

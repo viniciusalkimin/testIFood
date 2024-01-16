@@ -1,4 +1,6 @@
 package com.alkimin.testifoodapi.application.category.dto;
 
-public record CategoryUpdateRecord(String categoryId, String title, String description) {
+import jakarta.validation.constraints.NotBlank;
+
+public record CategoryUpdateRecord(String categoryId, @NotBlank String title, @NotBlank String description) {
 }

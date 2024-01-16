@@ -13,6 +13,11 @@ import com.alkimin.testifoodapi.infrastructure.user.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+
 @Service
 @AllArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
@@ -33,13 +38,21 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public CategoryUpdatedRecord update(CategoryUpdateRecord categoryUpdate) {
         var category = categoryRepository.findById(categoryUpdate.categoryId()).orElseThrow(() -> new CategoryNotFoundException("Category informed do not exists!"));
-        if (!categoryUpdate.title().isEmpty()) {
+        if (!Objects.equals(categoryUpdate.title(), category.getTitle())) {
             category.setTitle(categoryUpdate.title());
         }
-        if (!categoryUpdate.description().isEmpty()) {
+        if (!Objects.equals(categoryUpdate.description(), category.getDescription())) {
             category.setDescription(categoryUpdate.description());
         }
         categoryRepository.save(category);
         return new CategoryUpdatedRecord(category.getId());
+    }
+
+    @Override
+    public HashMap<String, String> delete(String categoryId) {
+        categoryRepository.deleteById(categoryId);
+        var map = new HashMap<String, String>();
+        map.put("categoryId", categoryId);
+        return map;
     }
 }
