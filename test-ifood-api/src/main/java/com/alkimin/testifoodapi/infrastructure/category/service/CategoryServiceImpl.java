@@ -19,8 +19,6 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Objects;
 
-import static java.nio.file.Files.getOwner;
-
 @Service
 @AllArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
@@ -28,7 +26,6 @@ public class CategoryServiceImpl implements CategoryService {
     private CategoryRepository categoryRepository;
     private UserRepository userRepository;
     private SQSPublisher sqsPublisher;
-    private ObjectMapper mapper;
 
     @Override
     public CategoryCreatedRecord createCategory(CategoryCreateRecord categoryCreate) {
@@ -37,7 +34,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .description(categoryCreate.description())
                 .owner(owner).build();
         Category categorySaved = categoryRepository.save(category);
-        sqsPublisher.publishEvent(mapper.valueToTree(new CatalogPublishRecord(owner.getId())));
+        sqsPublisher.publishEvent(new CatalogPublishRecord(owner.getId()));
         return new CategoryCreatedRecord(categorySaved.getId(), categorySaved.getTitle(), owner.getId());
     }
 
@@ -52,7 +49,7 @@ public class CategoryServiceImpl implements CategoryService {
         }
         categoryRepository.save(category);
         var ownerId = category.getOwner().getId();
-        sqsPublisher.publishEvent(mapper.valueToTree(new CatalogPublishRecord(ownerId)));
+        sqsPublisher.publishEvent(new CatalogPublishRecord(ownerId));
         return new CategoryUpdatedRecord(category.getId());
     }
 
@@ -60,7 +57,7 @@ public class CategoryServiceImpl implements CategoryService {
     public HashMap<String, String> delete(String categoryId) {
         var ownerId = categoryRepository.findById(categoryId).orElseThrow(() -> new CategoryNotFoundException("Category informed do not exists!")).getOwner().getId();
         categoryRepository.deleteById(categoryId);
-        sqsPublisher.publishEvent(mapper.valueToTree(new CatalogPublishRecord(ownerId)));
+        sqsPublisher.publishEvent(new CatalogPublishRecord(ownerId));
         var map = new HashMap<String, String>();
         map.put("categoryId", categoryId);
         return map;

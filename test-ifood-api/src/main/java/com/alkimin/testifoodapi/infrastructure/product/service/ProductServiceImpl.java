@@ -6,6 +6,7 @@ import com.alkimin.testifoodapi.application.product.dto.ProductUpdateRecord;
 import com.alkimin.testifoodapi.application.product.dto.ProductUpdatedRecord;
 import com.alkimin.testifoodapi.application.product.exception.ProductNotFoundException;
 import com.alkimin.testifoodapi.application.product.service.ProductService;
+import com.alkimin.testifoodapi.application.user.exception.OwnerNotFoundException;
 import com.alkimin.testifoodapi.domain.product.Product;
 import com.alkimin.testifoodapi.infrastructure.category.dto.CatalogPublishRecord;
 import com.alkimin.testifoodapi.infrastructure.category.repository.CategoryRepository;
@@ -13,7 +14,6 @@ import com.alkimin.testifoodapi.infrastructure.localstack.sqs.service.SQSPublish
 import com.alkimin.testifoodapi.infrastructure.product.dto.ProductCreatedRecord;
 import com.alkimin.testifoodapi.infrastructure.product.repository.ProductRepository;
 import com.alkimin.testifoodapi.infrastructure.user.repository.UserRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -28,17 +28,16 @@ public class ProductServiceImpl implements ProductService {
     private UserRepository userRepository;
     private CategoryRepository categoryRepository;
     private SQSPublisher sqsPublisher;
-    private ObjectMapper mapper;
 
     @Override
     public ProductCreatedRecord create(ProductCreateRecord productCreate) {
-        var owner = userRepository.findById(productCreate.ownerId()).get();
+        var owner = userRepository.findById(productCreate.ownerId()).orElseThrow(() ->  new OwnerNotFoundException("Owner informed do not exists!"));
         var category = categoryRepository.findById(productCreate.categoryId()).orElseThrow(() -> new CategoryNotFoundException("Category informed do not exists!"));
         var product = Product.builder().title(productCreate.title())
                 .description(productCreate.description()).price(productCreate.price())
                 .category(category).owner(owner).build();
         var productSaved = productRepository.save(product);
-        sqsPublisher.publishEvent(mapper.valueToTree(new CatalogPublishRecord(owner.getId())));
+        sqsPublisher.publishEvent(new CatalogPublishRecord(owner.getId()));
         return new ProductCreatedRecord(productSaved.getId(), productSaved.getTitle());
     }
 
@@ -60,7 +59,7 @@ public class ProductServiceImpl implements ProductService {
         }
         var productUpdated = productRepository.save(product);
         var ownerId = product.getOwner().getId();
-        sqsPublisher.publishEvent(mapper.valueToTree(new CatalogPublishRecord(ownerId)));
+        sqsPublisher.publishEvent(new CatalogPublishRecord(ownerId));
         return new ProductUpdatedRecord(productUpdated.getId(), productUpdated.getTitle());
     }
 
@@ -68,7 +67,7 @@ public class ProductServiceImpl implements ProductService {
     public HashMap<String, String> delete(String productId) {
         var ownerId = productRepository.findById(productId).orElseThrow(() -> new ProductNotFoundException("Product informed do not exists!")).getOwner().getId();
         productRepository.deleteById(productId);
-        sqsPublisher.publishEvent(mapper.valueToTree(new CatalogPublishRecord(ownerId)));
+        sqsPublisher.publishEvent(new CatalogPublishRecord(ownerId));
         var map = new HashMap<String, String>();
         map.put("productId", productId);
         return map;

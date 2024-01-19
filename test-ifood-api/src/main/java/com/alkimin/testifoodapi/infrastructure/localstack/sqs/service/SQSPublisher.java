@@ -1,6 +1,7 @@
 package com.alkimin.testifoodapi.infrastructure.localstack.sqs.service;
 
 
+import com.alkimin.testifoodapi.infrastructure.category.dto.CatalogPublishRecord;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -25,8 +26,9 @@ public class SQSPublisher {
 
     private static final String QUEUE_URL = "http://sqs.us-east-1.localhost.localstack.cloud:4566/000000000000/catalog.fifo";
 
-    public void publishEvent(JsonNode message) {
+    public void publishEvent(CatalogPublishRecord catalogPublish) {
         try {
+            var message = objectMapper.valueToTree(catalogPublish);
             var sendMessageRequest = new SendMessageRequest().withQueueUrl(QUEUE_URL)
                     .withMessageBody(objectMapper.writeValueAsString(message))
                     .withMessageDeduplicationId(UUID.randomUUID().toString())
